@@ -24,8 +24,8 @@ def compare_channel_name(name1, name2)
 end
 
 def compare_subscriber_count(count1, count2) 
-  count1_int = count1.to_i
-  count2_int = count2.to_i
+  count1_int = count1.delete(',').to_i
+  count2_int = count2.delete(',').to_i
 
   return count1_int == count2_int
 end
@@ -67,6 +67,5 @@ def find_discrepancy(file1, file2, concern = nil)
     end
   end
 
-  puts(discrepancy)
   return discrepancy
 end
