@@ -1,56 +1,75 @@
 require "csv"
 
 
-def compare_channel_name(name1, name2)
+def compare_channel_name(names)
 
-  # Every channel name has a unique id at of 22 at the end
   unique_id_length = 22
+  previous_name = nil
 
-  # Get last 22 chars of channel 1's name
-  if (name1.length() >= unique_id_length)
-    name1_trail = name1[(name1.length()-unique_id_length)..-1]
-  else
-    raise Exception.new "Channel Name is not Valid"
+  for i in 0..(names.length()-1)
+    # Get last 22 chars of channel 1's name
+    current_name = names[i]
+    if (current_name.length() >= unique_id_length)
+      name_trail = current_name[(current_name.length()-unique_id_length)..-1]
+      if (previous_name == nil)
+        previous_name = name_trail
+      else
+        if (previous_name != name_trail)
+          return false
+        end
+      end
+    else
+      raise Exception.new "Channel Name is not Valid"
+    end
   end
 
-  # Get last 22 chars of channel 2's name
-  if (name2.length() >= unique_id_length)
-    name2_trail = name2[(name2.length()-unique_id_length)..-1]
-  else
-    raise Exception.new "Channel Name is not Valid"
-  end
-
-  return name1_trail == name2_trail
-end
-
-def compare_subscriber_count(count1, count2) 
-  count1_int = count1.delete(',').to_i
-  count2_int = count2.delete(',').to_i
-
-  return count1_int == count2_int
+  return true
 end
 
 
-def find_discrepancy(file1, file2, concern = nil)
+# Loop through subscriber counts and check that it is the same as the previous value
+def compare_subscriber_count(subscriber_counts) 
+
+  previous_count = nil
+  for i in 0..(subscriber_counts.length()-1)
+    count = subscriber_counts[i].delete(',').to_i
+    if (previous_count == nil)
+      previous_count = count
+    else
+      if (previous_count != count)
+        return false
+      end
+    end
+  end
+  return true
+end
+
+
+def find_discrepancy(files, concern = nil)
   
 
-  # Check arg1 is an existing file
-  if (File.exist?(file1))
-    f1 = CSV.read(file1)
-  else
-    raise Exception.new "File does not exist"
+  if (files.length < 2)
+    raise Exception.new "Need at least two files"
+  end
+  
+  # Check file names are unique. Then checks file exists and reads content
+  file_content = Array.new
+  files.sort()
+  prevfile = nil
+  for i in 0..(files.length-1)
+    if (prevfile != nil and prevfile == files[i]) 
+      raise Exception.new "File names are not distinct"
+    end
+
+    if (File.exist?(files[i]))
+      file_content.push(CSV.read(files[i]))
+    else
+      raise Exception.new "File does not exist"
+    end
+
+    prevfile = files[i]
   end
 
-  # Check arg2 is an existing file
-  if (File.exist?(file2))
-    f2 = CSV.read(file2)
-  else
-    raise Exception.new "File does not exist"
-  end
-
-  if (file1 == file2) 
-    raise Exception.new "File names are not distinct"
-  end
 
   # Check arg3 is subscriber_count or channel_ownership
   handle_subscriber_count = true
@@ -66,22 +85,27 @@ def find_discrepancy(file1, file2, concern = nil)
   end
 
   discrepancy = Array.new
-  for i in 1..(f1.length()-1)
+  for i in 1..(file_content[0].length()-1)
     
-    account1 = f1[i]
-    account2 = f2[i]
+    channel_name_array = Array.new
+    subscriber_count_array = Array.new
+    for j in 0..(file_content.length()-1)
+      channel_name_array.push(file_content[j][i][1])
+      subscriber_count_array.push(file_content[j][i][2])
+    end
 
     # Check Channel Name is the same (add if isn't)
-    if (handle_channel_ownership and not compare_channel_name(account1[1], account2[1])) 
-      discrepancy.push(account1[0])
+    if (handle_channel_ownership and not compare_channel_name(channel_name_array)) 
+      discrepancy.push(file_content[0][i][0])
       next
     end
 
     # Check Subscriber Count is the same (add if isn't)
-    if (handle_subscriber_count and not compare_subscriber_count(account1[2], account2[2])) 
-      discrepancy.push(account1[0])
+    if (handle_subscriber_count and not compare_subscriber_count(subscriber_count_array)) 
+      discrepancy.push(file_content[0][i][0])
       next
     end
+
   end
 
   return discrepancy
