@@ -48,6 +48,10 @@ def find_discrepancy(file1, file2, concern = nil)
     raise Exception.new "File does not exist"
   end
 
+  if (file1 == file2) 
+    raise Exception.new "File names are not distinct"
+  end
+
   # Check arg3 is subscriber_count or channel_ownership
   handle_subscriber_count = true
   handle_channel_ownership = true

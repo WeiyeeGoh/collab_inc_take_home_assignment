@@ -16,15 +16,19 @@ end
 RSpec.describe "Test Parameter Type" do 
 
   it 'Call with one incorrect file input as arg1'  do
-    expect{find_discrepancy('1', 'csv_files/test1_f1.csv', "subscriber_count")}.to raise_error("File does not exist")
+    expect{find_discrepancy('1', 'csv_files/test1_f1.csv')}.to raise_error("File does not exist")
   end
 
   it 'Call with one incorrect file input as arg2'  do
-    expect{find_discrepancy('csv_files/test1_f1.csv', '1', "subscriber_count")}.to raise_error("File does not exist")
+    expect{find_discrepancy('csv_files/test1_f1.csv', '1')}.to raise_error("File does not exist")
   end
 
   it 'Call with existing files for arg1 and arg2'  do
-    expect(find_discrepancy("csv_files/test1_f1.csv", "csv_files/test2_f1.csv", "subscriber_count")).to be_kind_of(Array)
+    expect(find_discrepancy("csv_files/test1_f1.csv", "csv_files/test2_f1.csv")).to be_kind_of(Array)
+  end
+
+  it 'Call with different same file names' do 
+    expect{find_discrepancy('csv_files/test1_f1.csv', 'csv_files/test1_f1.csv')}.to raise_error("File names are not distinct")
   end
 
   it 'Call with arg3 as incorrect value' do
