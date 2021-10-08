@@ -48,20 +48,33 @@ def find_discrepancy(file1, file2, concern = nil)
     raise Exception.new "File does not exist"
   end
 
+  # Check arg3 is subscriber_count or channel_ownership
+  handle_subscriber_count = true
+  handle_channel_ownership = true
+  if (concern != nil)
+    if (concern == "subscriber_count")
+      handle_channel_ownership = false
+    elsif (concern == "channel_ownership")
+      handle_subscriber_count = false
+    else
+      raise Exception.new "Concern parameter must be subscriber_count or channel_ownership"
+    end
+  end
+
   discrepancy = Array.new
-
-
   for i in 1..(f1.length()-1)
     
     account1 = f1[i]
     account2 = f2[i]
 
-    if (not compare_channel_name(account1[1], account2[1])) 
+    # Check Channel Name is the same (add if isn't)
+    if (handle_channel_ownership and not compare_channel_name(account1[1], account2[1])) 
       discrepancy.push(account1[0])
       next
     end
 
-    if (not compare_subscriber_count(account1[2], account2[2])) 
+    # Check Subscriber Count is the same (add if isn't)
+    if (handle_subscriber_count and not compare_subscriber_count(account1[2], account2[2])) 
       discrepancy.push(account1[0])
       next
     end
@@ -69,3 +82,4 @@ def find_discrepancy(file1, file2, concern = nil)
 
   return discrepancy
 end
+
